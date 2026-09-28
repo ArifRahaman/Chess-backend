@@ -131,13 +131,22 @@ async def ws_endpoint(websocket: WebSocket):
         )
 
         if opponent is not None:
-            # both present — tell everyone the game can start
+            # both present — tell everyone the game can start.
+            # Include each player's opponent name so both sides can show it.
             await _safe_send(
                 opponent.ws,
                 {"type": "opponent_joined", "name": name},
             )
             for p in room.players:
-                await _safe_send(p.ws, {"type": "start", "color": p.color})
+                foe = room.opponent_of(p)
+                await _safe_send(
+                    p.ws,
+                    {
+                        "type": "start",
+                        "color": p.color,
+                        "opponent": foe.name if foe else "",
+                    },
+                )
 
         # ----- message loop -----
         while True:
